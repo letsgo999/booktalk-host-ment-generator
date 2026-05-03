@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>북톡방 독서토론 멘트 생성기</title>
-    <!-- 복잡한 React, Babel 모두 제거. 오직 스타일용 Tailwind만 유지 -->
+    <!-- 순수 HTML + 바닐라 JS. React/Babel/lucide 일체 없음. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
@@ -69,6 +69,7 @@
         <div id="view-loading" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-16 text-center space-y-4 hidden">
             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 animate-spin mx-auto"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
             <p class="text-lg font-bold text-slate-800">도서 정보를 심층 분석 중입니다...</p>
+            <p class="text-sm text-slate-500">웹 검색과 AI 분석에 20~40초 정도 걸립니다.</p>
         </div>
 
         <!-- 결과 화면 -->
@@ -84,7 +85,7 @@
                 
                 <div class="p-8 space-y-10">
                     <section class="space-y-4">
-                        <h3 class="flex items-center gap-2 text-slate-900 font-bold text-xl text-blue-600">
+                        <h3 class="flex items-center gap-2 font-bold text-xl text-blue-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                             <span class="text-slate-900">오프닝 초대 멘트</span>
                         </h3>
@@ -94,7 +95,7 @@
                     </section>
 
                     <section class="space-y-4">
-                        <h3 class="flex items-center gap-2 text-slate-900 font-bold text-xl text-blue-600">
+                        <h3 class="flex items-center gap-2 font-bold text-xl text-blue-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                             <span class="text-slate-900">테마 토론 질문 5선</span>
                         </h3>
@@ -104,7 +105,7 @@
                     </section>
 
                     <section class="space-y-4">
-                        <h3 class="flex items-center gap-2 text-slate-900 font-bold text-xl text-blue-600">
+                        <h3 class="flex items-center gap-2 font-bold text-xl text-blue-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             <span class="text-slate-900">발제자 심층 질문 3선</span>
                         </h3>
@@ -127,7 +128,7 @@
     <div id="modal-settings" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <div class="flex items-center gap-2 font-bold text-slate-800 text-blue-600">
+                <div class="flex items-center gap-2 font-bold text-blue-600">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
                     <span class="text-slate-800">API 설정</span>
                 </div>
@@ -156,17 +157,24 @@
     <script>
         let apiKey = '';
 
-        // 화면 로드 시 실행
-        window.onload = function() {
-            const savedKey = localStorage.getItem('btb_api_key');
-            if (savedKey) {
-                apiKey = savedKey;
-                updateHeaderIcon(true);
-            } else {
+        // 화면 로드 시 실행 (localStorage 접근을 try/catch로 감싸 어떤 환경에서도 첫 화면이 뜨도록 보장)
+        window.addEventListener('DOMContentLoaded', function() {
+            try {
+                const savedKey = localStorage.getItem('btb_api_key');
+                if (savedKey) {
+                    apiKey = savedKey;
+                    updateHeaderIcon(true);
+                } else {
+                    document.getElementById('api-alert').classList.remove('hidden');
+                    updateHeaderIcon(false);
+                }
+            } catch (err) {
+                // localStorage 접근 불가 환경(샌드박스, 프라이빗 모드 일부)에서도 앱은 정상 동작
+                console.warn('localStorage 접근 불가:', err);
                 document.getElementById('api-alert').classList.remove('hidden');
                 updateHeaderIcon(false);
             }
-        };
+        });
 
         // 설정 모달 열기/닫기
         function toggleSettings(show) {
@@ -184,7 +192,11 @@
         function saveSettings(e) {
             e.preventDefault();
             apiKey = document.getElementById('api-key-input').value.trim();
-            localStorage.setItem('btb_api_key', apiKey);
+            try {
+                localStorage.setItem('btb_api_key', apiKey);
+            } catch (err) {
+                console.warn('localStorage 저장 불가 (세션 동안만 유지됩니다):', err);
+            }
             document.getElementById('api-alert').classList.add('hidden');
             updateHeaderIcon(true);
             toggleSettings(false);
@@ -226,6 +238,19 @@
             setView('input');
         }
 
+        // 응답 텍스트에서 JSON만 안전하게 추출
+        function extractJson(text) {
+            // 백틱 펜스 제거
+            let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+            // 첫 '{'와 마지막 '}' 사이만 추출 (앞뒤에 잡설이 붙어 와도 JSON만 살아남음)
+            const start = cleaned.indexOf('{');
+            const end = cleaned.lastIndexOf('}');
+            if (start !== -1 && end !== -1 && end > start) {
+                cleaned = cleaned.substring(start, end + 1);
+            }
+            return JSON.parse(cleaned);
+        }
+
         // API 분석 실행
         async function handleAnalyze(e) {
             e.preventDefault();
@@ -242,74 +267,100 @@
 
             setView('loading');
 
-            const systemPrompt = `
-                당신은 [일욜밤 북톡방]의 전문 호스트이자 독서 토론 전문가입니다. 
-                사용자가 제공하는 도서 URL을 바탕으로 도서 정보를 분석하여 깊이 있는 토론 질문을 생성합니다.
+            const systemPrompt = `당신은 [일욜밤 북톡방]의 전문 호스트이자 독서 토론 전문가입니다.
+사용자가 제공하는 도서 URL을 바탕으로 도서 정보를 웹에서 검색·분석하여 깊이 있는 토론 질문을 생성합니다.
 
-                [가이드라인]
-                - 기존 [일욜밤 북톡방] 안내문의 따뜻하면서도 예리한 톤앤매너를 철저히 유지하세요.
-                - 도서의 주제와 맥락, 저자의 의도, 출판사 소개글, 독자 리뷰를 종합적으로 분석하세요.
-                - '테마 질문'은 일반 독자가 자신의 삶이나 비즈니스에 적용해 볼 수 있는 질문이어야 합니다.
-                - '발제자 질문'은 해당 책을 깊이 연구한 발제자에게 던지는 날카로운 통찰적 질문이어야 합니다.
+[가이드라인]
+- 따뜻하면서도 예리한 톤앤매너를 유지하세요.
+- 도서의 주제와 맥락, 저자의 의도, 출판사 소개글, 독자 리뷰를 종합적으로 분석하세요.
+- '테마 질문'은 일반 독자가 자신의 삶이나 비즈니스에 적용해 볼 수 있는 질문이어야 합니다.
+- '발제자 질문'은 해당 책을 깊이 연구한 발제자에게 던지는 날카로운 통찰적 질문이어야 합니다.
 
-                [출력 형식]
-                반드시 아래 JSON 형식으로만 응답하세요:
-                {
-                    "bookTitle": "책 제목",
-                    "intro": "북톡방 스타일의 오프닝 멘트 (계절감과 문제의식을 담은 3-4문장)",
-                    "themeQuestions": ["질문1", "질문2", "질문3", "질문4", "질문5"],
-                    "presenterQuestions": ["질문1", "질문2", "질문3"]
-                }
-            `;
+[출력 형식]
+다른 어떤 설명도 붙이지 말고, 반드시 아래 JSON 형식의 텍스트로만 응답하세요. 마크다운 코드 펜스(\`\`\`)도 붙이지 마세요.
+{
+  "bookTitle": "책 제목",
+  "intro": "북톡방 스타일의 오프닝 멘트 (계절감과 문제의식을 담은 3-4문장)",
+  "themeQuestions": ["질문1", "질문2", "질문3", "질문4", "질문5"],
+  "presenterQuestions": ["질문1", "질문2", "질문3"]
+}`;
+
+            // 모델명: 안정 버전인 gemini-2.5-flash 사용
+            // google_search 도구를 켜면 responseMimeType: "application/json" 강제 옵션과
+            // 충돌하는 모델이 있으므로, JSON 강제는 빼고 시스템 프롬프트로 형식을 지시한 뒤
+            // extractJson()으로 안전하게 파싱한다.
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `이 도서 URL 분석: ${url}` }] }],
+                        contents: [{ parts: [{ text: `다음 도서 URL을 웹 검색으로 분석해 주세요: ${url}` }] }],
                         systemInstruction: { parts: [{ text: systemPrompt }] },
-                        tools: [{ google_search: {} }],
-                        generationConfig: { responseMimeType: "application/json" }
+                        tools: [{ google_search: {} }]
                     })
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error?.message || "API 요청 중 문제가 발생했습니다.");
+                    let errMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errMsg = errorData.error?.message || errMsg;
+                    } catch (_) { /* JSON 아닐 수도 있음 */ }
+                    throw new Error(errMsg);
                 }
 
                 const data = await response.json();
                 
-                // 마크다운 백틱(```json)이 섞여올 경우를 대비한 안전한 파싱
-                let jsonText = data.candidates[0].content.parts[0].text;
-                jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-                const result = JSON.parse(jsonText);
+                // candidates 구조 방어적으로 접근
+                const parts = data?.candidates?.[0]?.content?.parts;
+                if (!parts || !parts.length) {
+                    throw new Error("AI 응답이 비어 있습니다. 다른 URL로 다시 시도해 주세요.");
+                }
+                // 텍스트 part들을 모두 합쳐서 JSON 추출 (검색 결과와 텍스트가 섞여 올 수 있음)
+                const rawText = parts.map(p => p.text || '').join('').trim();
+                if (!rawText) {
+                    throw new Error("AI 응답에 텍스트가 없습니다.");
+                }
 
+                const result = extractJson(rawText);
                 renderResult(result);
 
             } catch (err) {
-                showError(`오류 발생: ${err.message}. API 키가 정확한지 확인해 주세요.`);
+                showError(`오류 발생: ${err.message}. API 키와 URL을 다시 확인해 주세요.`);
             }
+        }
+
+        // HTML 인젝션 방지용 이스케이프
+        function escapeHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
         // 파싱된 데이터를 화면에 그리기
         function renderResult(data) {
-            document.getElementById('res-title').innerText = data.bookTitle;
-            document.getElementById('res-intro').innerText = `"${data.intro}"`;
+            document.getElementById('res-title').innerText = data.bookTitle || '제목 없음';
+            document.getElementById('res-intro').innerText = `"${data.intro || ''}"`;
 
-            const themesHtml = data.themeQuestions.map((q, idx) => `
+            const themes = Array.isArray(data.themeQuestions) ? data.themeQuestions : [];
+            const themesHtml = themes.map((q, idx) => `
                 <div class="flex gap-4 p-5 rounded-xl border border-slate-100 bg-white hover:border-blue-200 hover:shadow-md transition-all">
                     <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold text-sm shrink-0">${idx + 1}</span>
-                    <p class="text-slate-800 font-semibold leading-normal pt-1">${q}</p>
+                    <p class="text-slate-800 font-semibold leading-normal pt-1">${escapeHtml(q)}</p>
                 </div>
             `).join('');
             document.getElementById('res-themes').innerHTML = themesHtml;
 
-            const presenterHtml = data.presenterQuestions.map((q, idx) => `
+            const presenters = Array.isArray(data.presenterQuestions) ? data.presenterQuestions : [];
+            const presenterHtml = presenters.map((q, idx) => `
                 <div class="flex gap-4 p-5 rounded-xl border border-slate-200 bg-slate-900 text-white">
                     <span class="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 text-white font-bold text-sm shrink-0">${idx + 1}</span>
-                    <p class="font-medium leading-normal pt-1">${q}</p>
+                    <p class="font-medium leading-normal pt-1">${escapeHtml(q)}</p>
                 </div>
             `).join('');
             document.getElementById('res-presenter').innerHTML = presenterHtml;
