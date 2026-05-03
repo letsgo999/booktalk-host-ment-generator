@@ -21,10 +21,12 @@
 
     <script type="text/babel">
         const { useState, useEffect } = React;
+        
+        // 수정된 부분: lucide -> lucideReact 로 변경해야 React 컴포넌트로 정상 작동합니다.
         const { 
             BookOpen, Link: LinkIcon, MessageSquare, Send, Loader2, 
             Sparkles, User, CheckCircle2, AlertCircle, Settings, X, Key
-        } = lucide;
+        } = lucideReact;
 
         const App = () => {
             const [url, setUrl] = useState('');
