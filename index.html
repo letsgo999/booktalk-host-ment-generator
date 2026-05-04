@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>북톡방 독서토론 멘트 생성기</title>
-    <!-- 순수 HTML + 바닐라 JS. React/Babel/lucide 일체 없음. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
@@ -14,7 +13,6 @@
 </head>
 <body class="text-slate-900 min-h-screen flex flex-col">
 
-    <!-- Header -->
     <header class="bg-white border-b border-slate-200 py-4 px-6 sticky top-0 z-20 flex justify-between items-center shadow-sm">
         <div class="flex items-center gap-3">
             <div class="bg-blue-600 p-2 rounded-lg shadow-blue-200 shadow-lg text-white">
@@ -29,19 +27,16 @@
 
     <main class="flex-1 max-w-3xl mx-auto w-full p-4 py-8 relative">
         
-        <!-- API 키 없음 경고 -->
         <div id="api-alert" class="mb-6 bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 text-red-700 text-sm shadow-sm hidden">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <p><strong>API 키 설정 필요:</strong> 도서 분석을 위해 우측 상단 톱니바퀴(설정)를 클릭해 API 키를 입력해 주세요.</p>
         </div>
 
-        <!-- 에러 메시지 -->
         <div id="error-alert" class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 text-red-800 text-sm hidden">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <p id="error-text">오류가 발생했습니다.</p>
         </div>
 
-        <!-- 입력 화면 -->
         <div id="view-input" class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 md:p-12 text-center space-y-6 block">
             <div class="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto text-blue-600">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
@@ -65,14 +60,12 @@
             </form>
         </div>
 
-        <!-- 로딩 화면 -->
         <div id="view-loading" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-16 text-center space-y-4 hidden">
             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 animate-spin mx-auto"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-            <p class="text-lg font-bold text-slate-800">도서 정보를 심층 분석 중입니다...</p>
+            <p class="text-lg font-bold text-slate-800">도서 정보를 살펴보고 있어요...</p>
             <p class="text-sm text-slate-500">웹 검색과 AI 분석에 20~40초 정도 걸립니다.</p>
         </div>
 
-        <!-- 결과 화면 -->
         <div id="view-result" class="space-y-6 hidden">
             <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                 <div class="bg-slate-900 p-8 text-white">
@@ -97,21 +90,17 @@
                     <section class="space-y-4">
                         <h3 class="flex items-center gap-2 font-bold text-xl text-blue-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                            <span class="text-slate-900">테마 토론 질문 5선</span>
+                            <span class="text-slate-900">함께 나눌 토론 질문 5선</span>
                         </h3>
-                        <div id="res-themes" class="grid gap-3">
-                            <!-- JS로 삽입됨 -->
-                        </div>
+                        <div id="res-themes" class="grid gap-3"></div>
                     </section>
 
                     <section class="space-y-4">
                         <h3 class="flex items-center gap-2 font-bold text-xl text-blue-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            <span class="text-slate-900">발제자 심층 질문 3선</span>
+                            <span class="text-slate-900">발제자 풀어주는 질문 3선</span>
                         </h3>
-                        <div id="res-presenter" class="grid gap-3">
-                            <!-- JS로 삽입됨 -->
-                        </div>
+                        <div id="res-presenter" class="grid gap-3"></div>
                     </section>
                 </div>
                 
@@ -124,7 +113,6 @@
         </div>
     </main>
 
-    <!-- 설정 모달 -->
     <div id="modal-settings" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -153,11 +141,9 @@
         <p>© 2025 SOCIAL SCHOOL SUNDAY NIGHT BOOK-TALK HOST TOOL</p>
     </footer>
 
-    <!-- 핵심 로직: 외부 의존성 없는 순수 자바스크립트 -->
     <script>
         let apiKey = '';
 
-        // 화면 로드 시 실행 (localStorage 접근을 try/catch로 감싸 어떤 환경에서도 첫 화면이 뜨도록 보장)
         window.addEventListener('DOMContentLoaded', function() {
             try {
                 const savedKey = localStorage.getItem('btb_api_key');
@@ -169,14 +155,12 @@
                     updateHeaderIcon(false);
                 }
             } catch (err) {
-                // localStorage 접근 불가 환경(샌드박스, 프라이빗 모드 일부)에서도 앱은 정상 동작
                 console.warn('localStorage 접근 불가:', err);
                 document.getElementById('api-alert').classList.remove('hidden');
                 updateHeaderIcon(false);
             }
         });
 
-        // 설정 모달 열기/닫기
         function toggleSettings(show) {
             const modal = document.getElementById('modal-settings');
             const input = document.getElementById('api-key-input');
@@ -188,21 +172,19 @@
             }
         }
 
-        // 설정 저장
         function saveSettings(e) {
             e.preventDefault();
             apiKey = document.getElementById('api-key-input').value.trim();
             try {
                 localStorage.setItem('btb_api_key', apiKey);
             } catch (err) {
-                console.warn('localStorage 저장 불가 (세션 동안만 유지됩니다):', err);
+                console.warn('localStorage 저장 불가:', err);
             }
             document.getElementById('api-alert').classList.add('hidden');
             updateHeaderIcon(true);
             toggleSettings(false);
         }
 
-        // 상단 설정 아이콘 상태 변경
         function updateHeaderIcon(hasKey) {
             const btn = document.getElementById('btn-settings');
             if (hasKey) {
@@ -212,7 +194,6 @@
             }
         }
 
-        // 뷰 전환 (입력창, 로딩창, 결과창)
         function setView(viewName) {
             document.getElementById('view-input').classList.add('hidden');
             document.getElementById('view-loading').classList.add('hidden');
@@ -223,7 +204,6 @@
             if (viewName === 'result') document.getElementById('view-result').classList.remove('hidden');
         }
 
-        // 에러 표시
         function showError(msg) {
             const errBox = document.getElementById('error-alert');
             document.getElementById('error-text').innerText = msg;
@@ -231,18 +211,14 @@
             setView('input');
         }
 
-        // 결과창 초기화
         function resetView() {
             document.getElementById('url-input').value = '';
             document.getElementById('error-alert').classList.add('hidden');
             setView('input');
         }
 
-        // 응답 텍스트에서 JSON만 안전하게 추출
         function extractJson(text) {
-            // 백틱 펜스 제거
             let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-            // 첫 '{'와 마지막 '}' 사이만 추출 (앞뒤에 잡설이 붙어 와도 JSON만 살아남음)
             const start = cleaned.indexOf('{');
             const end = cleaned.lastIndexOf('}');
             if (start !== -1 && end !== -1 && end > start) {
@@ -251,7 +227,6 @@
             return JSON.parse(cleaned);
         }
 
-        // API 분석 실행
         async function handleAnalyze(e) {
             e.preventDefault();
             document.getElementById('error-alert').classList.add('hidden');
@@ -267,28 +242,64 @@
 
             setView('loading');
 
-            const systemPrompt = `당신은 [일욜밤 북톡방]의 전문 호스트이자 독서 토론 전문가입니다.
-사용자가 제공하는 도서 URL을 바탕으로 도서 정보를 웹에서 검색·분석하여 깊이 있는 토론 질문을 생성합니다.
+            // ─────────────────────────────────────────────────────────────
+            // 시스템 프롬프트: 거실 소파 분위기로 전면 재작성
+            // ─────────────────────────────────────────────────────────────
+            const systemPrompt = `당신은 [일욜밤 북톡방]의 따뜻한 진행자입니다.
+일요일 밤, 책을 좋아하는 사람들이 둘러앉아 편하게 이야기 나누는 분위기를 만드는 게 당신의 역할입니다.
 
-[가이드라인]
-- 따뜻하면서도 예리한 톤앤매너를 유지하세요.
-- 도서의 주제와 맥락, 저자의 의도, 출판사 소개글, 독자 리뷰를 종합적으로 분석하세요.
-- '테마 질문'은 일반 독자가 자신의 삶이나 비즈니스에 적용해 볼 수 있는 질문이어야 합니다.
-- '발제자 질문'은 해당 책을 깊이 연구한 발제자에게 던지는 날카로운 통찰적 질문이어야 합니다.
+[가장 중요한 톤앤매너 규칙]
+이 모임은 학술 토론회나 세미나가 아닙니다. 거실 소파에 둘러앉아 차 한 잔 마시며 책 이야기 나누는 자리예요.
+질문을 받는 사람이 "어, 그거 나도 생각해봤는데" 하고 자연스럽게 입을 열 수 있어야 합니다.
+
+[질문 만들 때 반드시 피해야 할 것들]
+- "근본적인", "본질적인", "심층적인", "방법론적", "통찰적", "패러다임" 같은 무거운 학술 용어
+- "~에 대한 구체적인 제언을 듣고 싶습니다" 같은 인터뷰어 같은 어투
+- 한 질문 안에 묻는 것이 두세 개씩 들어 있는 복합 질문 (질문은 하나만 또렷하게)
+- 책의 핵심 키워드를 그대로 따라 써서 만든 추상적 질문
+  (예: 책에 '파괴'가 나오면 "건설적 파괴와 무모한 파괴의 경계는?" 같은 질문 금지)
+- 발제자에게 "방법론을 제시해 달라", "전망을 말해 달라"고 요구하는 질문
+
+[좋은 질문의 특징]
+- 자기 일상이나 경험에서 답을 꺼낼 수 있는 질문
+- "혹시 이런 적 있으세요?", "어떤 장면이 떠오르셨어요?" 같은 부드러운 톤
+- 책의 한 부분, 한 인물, 한 장면에 초점을 맞춘 구체적인 질문
+- 정답이 없고 각자 다르게 답할 수 있는 열린 질문
+- 학생이 아니라 친구한테 물어보는 듯한 어투
+
+[테마 토론 질문 5개 — 함께 나눌 일반 질문]
+일상의 감각으로 책을 다시 읽게 하는 질문. "내 삶에 적용하면 어떨까?" 정도의 가벼운 깊이.
+어렵지 않게, 누구나 자기 이야기로 풀어낼 수 있게.
+좋은 톤 예시:
+- "이 책에서 가장 마음에 남은 장면이나 문장이 있다면 어떤 거였어요?"
+- "책 읽다가 '아, 이건 나도 그래' 싶었던 부분이 있었나요?"
+- "이 책 속 인물 중 한 명이 옆자리에 있다면 뭘 가장 묻고 싶으세요?"
+- "책을 덮고 나서 일상에서 살짝 달리 보이게 된 게 있다면요?"
+
+[발제자 풀어주는 질문 3개]
+이건 발제자를 추궁하거나 시험하는 질문이 절대 아닙니다.
+발제자가 책 이야기를 더 신나게, 더 풍부하게 풀어낼 수 있도록 멍석을 깔아주는 질문입니다.
+발제자가 "아, 그 얘기 내가 하고 싶었어요!" 하고 반가워할 만한 질문.
+좋은 톤 예시:
+- "이 책을 고른 특별한 이유가 있으세요?"
+- "읽으면서 가장 밑줄 많이 그은 부분이 어디였어요?"
+- "이 책 누구한테 추천하고 싶으세요? 왜요?"
+- "책에서 저자랑 살짝 의견이 다르거나 갸우뚱했던 부분이 있다면요?"
+- "발제 준비하면서 새롭게 알게 된 거나 인상 깊었던 게 있다면 살짝 들려주세요."
+
+[오프닝 멘트]
+계절감을 살짝 담되 너무 길지 않게 3-4문장. 어려운 한자어나 추상적 표현은 자제.
+"오늘은 이런 책을 함께 읽어봤어요. 같이 이야기 나눠봐요" 정도의 따뜻하고 편안한 초대.
 
 [출력 형식]
-다른 어떤 설명도 붙이지 말고, 반드시 아래 JSON 형식의 텍스트로만 응답하세요. 마크다운 코드 펜스(\`\`\`)도 붙이지 마세요.
+다른 어떤 설명도 붙이지 말고, 아래 JSON 형식으로만 응답하세요. 마크다운 코드 펜스(\`\`\`)도 붙이지 마세요.
 {
   "bookTitle": "책 제목",
-  "intro": "북톡방 스타일의 오프닝 멘트 (계절감과 문제의식을 담은 3-4문장)",
+  "intro": "오프닝 초대 멘트",
   "themeQuestions": ["질문1", "질문2", "질문3", "질문4", "질문5"],
   "presenterQuestions": ["질문1", "질문2", "질문3"]
 }`;
 
-            // 모델명: 안정 버전인 gemini-2.5-flash 사용
-            // google_search 도구를 켜면 responseMimeType: "application/json" 강제 옵션과
-            // 충돌하는 모델이 있으므로, JSON 강제는 빼고 시스템 프롬프트로 형식을 지시한 뒤
-            // extractJson()으로 안전하게 파싱한다.
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
 
             try {
@@ -307,18 +318,15 @@
                     try {
                         const errorData = await response.json();
                         errMsg = errorData.error?.message || errMsg;
-                    } catch (_) { /* JSON 아닐 수도 있음 */ }
+                    } catch (_) {}
                     throw new Error(errMsg);
                 }
 
                 const data = await response.json();
-                
-                // candidates 구조 방어적으로 접근
                 const parts = data?.candidates?.[0]?.content?.parts;
                 if (!parts || !parts.length) {
                     throw new Error("AI 응답이 비어 있습니다. 다른 URL로 다시 시도해 주세요.");
                 }
-                // 텍스트 part들을 모두 합쳐서 JSON 추출 (검색 결과와 텍스트가 섞여 올 수 있음)
                 const rawText = parts.map(p => p.text || '').join('').trim();
                 if (!rawText) {
                     throw new Error("AI 응답에 텍스트가 없습니다.");
@@ -332,7 +340,6 @@
             }
         }
 
-        // HTML 인젝션 방지용 이스케이프
         function escapeHtml(s) {
             return String(s)
                 .replace(/&/g, '&amp;')
@@ -342,7 +349,6 @@
                 .replace(/'/g, '&#039;');
         }
 
-        // 파싱된 데이터를 화면에 그리기
         function renderResult(data) {
             document.getElementById('res-title').innerText = data.bookTitle || '제목 없음';
             document.getElementById('res-intro').innerText = `"${data.intro || ''}"`;
