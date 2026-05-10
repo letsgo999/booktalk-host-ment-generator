@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>북톡방 독서토론 멘트 생성기</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf.bundle 안에 html2canvas와 jsPDF가 모두 포함되어 있음. 우리는 둘을 직접 호출해서 사용. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- 
+      ⚠️ 중요: html2pdf.bundle.min.js 한 줄로는 안 됨!
+      번들 안에 두 라이브러리가 들어있긴 하지만, 전역(window)으로 노출되지는 않음.
+      반드시 html2canvas와 jsPDF를 각각 따로 로드해야 함.
+    -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
@@ -373,23 +378,21 @@
         }
 
         // ─────────────────────────────────────────────────────────────
-        // PDF 다운로드 — html2canvas + jsPDF 직접 호출
+        // PDF 다운로드
         //
-        // 동작 원리:
-        // 1. 결과 카드 전체를 한 장의 거대한 canvas 이미지로 캡처
-        // 2. A4 한 페이지에 들어갈 높이만큼씩 위에서부터 잘라서
-        // 3. 각 슬라이스를 별도 페이지로 PDF에 추가
+        // 라이브러리 로드 방식:
+        //   ❌ html2pdf.bundle.min.js 한 줄로는 안 됨 (전역 노출 안 됨)
+        //   ✅ html2canvas.min.js + jspdf.umd.min.js 두 개를 따로 로드
         //
-        // 이전(html2pdf.js)과의 차이:
-        //   - "자르지 마" 룰을 모두 제거 → 알고리즘 길 잃을 일 없음
-        //   - 페이지 분할이 단순한 고정 간격이라 결과가 예측 가능
-        //   - 콘텐츠가 통째로 누락되거나 빈 페이지 생기는 문제 해결
-        //   - 트레이드오프: 질문이 페이지 경계에 살짝 걸릴 수 있음
-        //     (필요시 scale을 1.5로 낮추면 더 많이 들어가서 완화됨)
+        // 동작:
+        //   1) html2canvas로 결과 카드 전체를 한 장의 큰 이미지로 캡처
+        //   2) jsPDF로 새 PDF 만들고
+        //   3) 이미지를 A4 한 페이지 분량씩 잘라서 페이지마다 추가
         // ─────────────────────────────────────────────────────────────
         async function downloadPDF() {
+            // 라이브러리 존재 확인 (html2canvas는 전역, jsPDF는 window.jspdf.jsPDF로 접근)
             if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
-                alert('PDF 라이브러리가 아직 로딩 중입니다. 잠시 후 다시 시도해 주세요.');
+                alert('PDF 라이브러리가 아직 로딩 중입니다. 잠시 후 다시 시도해 주세요.\n계속 같은 메시지가 뜨면 페이지를 새로고침(Ctrl+Shift+R)해 주세요.');
                 return;
             }
 
@@ -398,7 +401,7 @@
             const btn = document.getElementById('btn-pdf');
             const btnText = document.getElementById('btn-pdf-text');
 
-            // 책 제목으로 파일명 생성
+            // 책 제목으로 파일명 자동 생성
             const bookTitle = (document.getElementById('res-title').innerText || '북톡방')
                 .replace(/[\\/:*?"<>|]/g, '')
                 .trim()
@@ -415,31 +418,30 @@
             actionBar.style.display = 'none';
 
             try {
-                // ── 1단계: 결과 카드를 한 장의 canvas로 캡처 ──
+                // 1단계: 화면 캡처
                 const canvas = await html2canvas(target, {
-                    scale: 2,                    // 고해상도 (2배)
+                    scale: 2,
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff',
                     windowWidth: target.scrollWidth
                 });
 
-                // ── 2단계: jsPDF 인스턴스 생성 ──
+                // 2단계: jsPDF 인스턴스 (UMD 빌드는 window.jspdf.jsPDF에 있음)
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('portrait', 'mm', 'a4');
 
-                // A4 사이즈 (mm 단위)
-                const pdfWidth = pdf.internal.pageSize.getWidth();   // 210
-                const pdfHeight = pdf.internal.pageSize.getHeight(); // 297
+                // A4 사이즈 (mm)
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
                 const margin = 10;
-                const usableWidth = pdfWidth - margin * 2;            // 190
-                const usableHeight = pdfHeight - margin * 2;          // 277
+                const usableWidth = pdfWidth - margin * 2;
+                const usableHeight = pdfHeight - margin * 2;
 
-                // 캡처된 이미지를 PDF 가로 폭에 맞춰 비율 계산
                 const imgWidthMm = usableWidth;
                 const imgHeightMm = (canvas.height * imgWidthMm) / canvas.width;
 
-                // ── 3단계: 한 페이지에 다 들어가는 경우 ──
+                // 3단계: 한 페이지 vs 멀티 페이지 분기
                 if (imgHeightMm <= usableHeight) {
                     pdf.addImage(
                         canvas.toDataURL('image/jpeg', 0.95),
@@ -448,8 +450,7 @@
                         imgWidthMm, imgHeightMm
                     );
                 } else {
-                    // ── 4단계: 여러 페이지로 분할 ──
-                    // canvas 픽셀 단위로 한 페이지 분량의 높이 계산
+                    // 멀티 페이지 분할
                     const pageHeightInCanvasPx = (usableHeight / imgWidthMm) * canvas.width;
                     let currentY = 0;
                     let pageNum = 0;
@@ -457,7 +458,6 @@
                     while (currentY < canvas.height) {
                         const sliceHeight = Math.min(pageHeightInCanvasPx, canvas.height - currentY);
 
-                        // 이번 페이지에 들어갈 슬라이스를 별도 canvas에 그림
                         const sliceCanvas = document.createElement('canvas');
                         sliceCanvas.width = canvas.width;
                         sliceCanvas.height = sliceHeight;
@@ -467,10 +467,10 @@
                         ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
                         ctx.drawImage(
                             canvas,
-                            0, currentY,                     // 원본 캔버스에서 잘라낼 영역의 좌상단
-                            canvas.width, sliceHeight,       // 잘라낼 영역의 크기
-                            0, 0,                            // 새 캔버스에 붙일 위치
-                            canvas.width, sliceHeight        // 붙일 크기
+                            0, currentY,
+                            canvas.width, sliceHeight,
+                            0, 0,
+                            canvas.width, sliceHeight
                         );
 
                         const sliceImgHeightMm = (sliceHeight * imgWidthMm) / canvas.width;
